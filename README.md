@@ -18,23 +18,27 @@ A child-friendly multiplication practice GUI that runs in a web browser.
 - Optional cheering sounds are generated locally. Use the speaker button to mute.
 - Practice again uses the same settings with a new question mix.
 
-## Run
+## Start the app
 
-Requires Node.js 22 or a compatible Node.js version supported by Vite 6.
+Requires Node.js 22 or a compatible version supported by Vite 6. If Node.js is
+not installed or is not on your PATH, install Node.js 22 and reopen the
+terminal before starting the app.
 
 ```sh
 npm install
+npm start
+```
+
+This starts the built-in static server and serves the app at
+http://127.0.0.1:3000.
+
+If you want the Vite development server instead, use:
+
+```sh
 npm run dev
 ```
 
-Open the local address printed by Vite, normally http://127.0.0.1:5173.
-Keep the terminal running while using the app. The VS Code task
-`Start Times Club` can also launch the development server on this machine.
-
-A checksum-verified portable Node.js 22.14.0 runtime was downloaded for this
-workspace session under `%LOCALAPPDATA%\TimesClub\runtime`. If Node.js is not
-on your PATH, use that runtime's `npm.cmd` for the commands above, or install
-Node.js and reopen the terminal.
+The development server is available on http://127.0.0.1:5173.
 
 ## Verify
 
