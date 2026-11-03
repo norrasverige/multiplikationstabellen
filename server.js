@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const port = Number(process.env.PORT) || 3000;
+const port = Number(process.env.PORT) || 3001;
 const host = process.env.HOST || '127.0.0.1';
 
 export function resolveRequestPath(requestPath, rootDir = __dirname) {
