@@ -14,9 +14,18 @@ export function makeQuestions(left, right, count, random = Math.random) {
   return questions;
 }
 
+export function answerTimeStats(answers) {
+  if (!answers.length) return { fastest: 0, slowest: 0, median: 0, average: 0 };
+  const values = [...answers].map(answer => Number(answer.responseMs) || 0).sort((left, right) => left - right);
+  const middle = Math.floor(values.length / 2);
+  const median = values.length % 2 === 0 ? (values[middle - 1] + values[middle]) / 2 : values[middle];
+  const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+  return { fastest: values[0], slowest: values[values.length - 1], median, average };
+}
+
 export function startSession(left, right, count, seconds, now = Date.now()) {
   if (!Number.isInteger(seconds) || seconds < 1 || seconds > 3600) throw new Error('Choose a practice time from 1 second to 60 minutes.');
-  return { questions: makeQuestions(left, right, count), answers: [], startedAt: now, deadline: now + seconds * 1000, duration: seconds, endedAt: null, reason: null };
+  return { questions: makeQuestions(left, right, count), answers: [], startedAt: now, deadline: now + seconds * 1000, duration: seconds, endedAt: null, reason: null, currentQuestionStartedAt: now };
 }
 
 export function remainingSeconds(session, now = Date.now()) {
@@ -37,8 +46,17 @@ export function submitAnswer(session, answer, now = Date.now()) {
   }
   if (!Number.isSafeInteger(answer) || answer < 0) throw new Error('Enter a whole number, zero or greater.');
   const question = session.questions[session.answers.length];
-  const result = { ...question, answer, expected: question.first * question.second, correct: answer === question.first * question.second };
+  const responseMs = Math.max(0, now - (session.currentQuestionStartedAt ?? session.startedAt));
+  const result = {
+    ...question,
+    answer,
+    expected: question.first * question.second,
+    correct: answer === question.first * question.second,
+    answeredAt: now,
+    responseMs
+  };
   session.answers.push(result);
+  session.currentQuestionStartedAt = now;
   if (session.answers.length === session.questions.length) finishSession(session, 'complete', now);
   return result;
 }

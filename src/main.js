@@ -1,5 +1,5 @@
 import { createIcons, ArrowRight, ArrowLeft, Check, CheckCheck, Clock3, Flag, RotateCcw, Settings2, Sparkles, Target, Trophy, Volume2, VolumeX, X } from 'lucide';
-import { startSession, remainingSeconds, submitAnswer, finishSession } from './practice.js';
+import { startSession, remainingSeconds, submitAnswer, finishSession, answerTimeStats } from './practice.js';
 import './style.css';
 
 const app = document.querySelector('#app');
@@ -13,6 +13,10 @@ let streak = 0;
 
 const icon = name => `<i data-lucide="${name}"></i>`;
 const timeLabel = seconds => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+const answerDurationLabel = milliseconds => {
+  if (milliseconds < 1000) return `${Math.round(milliseconds)} ms`;
+  return `${(milliseconds / 1000).toFixed(1)} s`;
+};
 const refreshIcons = () => createIcons({ icons, attrs: { 'aria-hidden': 'true', 'stroke-width': 1.8 } });
 
 function sound(kind) {
@@ -205,6 +209,7 @@ function showPractice() {
 function renderQuestion() {
   const index = session.answers.length;
   const question = session.questions[index];
+  session.currentQuestionStartedAt = Date.now();
   document.querySelector('#first-factor').textContent = question.first;
   document.querySelector('#second-factor').textContent = question.second;
   document.querySelector('#question-position').textContent = `Question ${index + 1} of ${session.questions.length}`;
@@ -225,10 +230,11 @@ function showResults() {
   const unanswered = session.questions.length - session.answers.length;
   const accuracy = session.answers.length ? Math.round(correct / session.answers.length * 100) : 0;
   const elapsed = Math.max(0, Math.round((session.endedAt - session.startedAt) / 1000));
+  const answerStats = answerTimeStats(session.answers);
   if (session.reason === 'complete') sound('complete');
   else if (session.reason === 'time' && unanswered > 0) sound('timeout');
   shell(`<div class="results-heading"><span class="trophy-art" aria-hidden="true">${icon('trophy')}<span class="trophy-spark one">+</span><span class="trophy-spark two">+</span></span><span class="eyebrow">${session.reason === 'time' ? 'TIME IS UP' : session.reason === 'complete' ? 'CHALLENGE COMPLETE' : 'PRACTICE FINISHED'}</span><h1>${correct === session.questions.length ? 'A perfect little practice!' : correct > 0 ? 'Look at you making progress.' : 'Every try is a new beginning.'}</h1><p>${session.answers.length ? 'A little more confident than when you started.' : 'Come back for another go whenever you are ready.'}</p></div>
-    <section class="result-stats" aria-label="Practice results"><div><span class="stat-label">${icon('check-check')} Correct</span><strong>${correct}<small> / ${session.answers.length}</small></strong></div><div><span class="stat-label">${icon('target')} Accuracy</span><strong>${accuracy}<small>%</small></strong></div><div><span class="stat-label">${icon('clock-3')} Time practiced</span><strong>${timeLabel(elapsed)}</strong></div><div><span class="stat-label">${icon('flag')} Unanswered</span><strong>${unanswered}</strong></div></section>
+    <section class="result-stats" aria-label="Practice results"><div><span class="stat-label">${icon('check-check')} Correct</span><strong>${correct}<small> / ${session.answers.length}</small></strong></div><div><span class="stat-label">${icon('target')} Accuracy</span><strong>${accuracy}<small>%</small></strong></div><div><span class="stat-label">${icon('clock-3')} Time practiced</span><strong>${timeLabel(elapsed)}</strong></div><div><span class="stat-label">${icon('flag')} Unanswered</span><strong>${unanswered}</strong></div>${session.answers.length ? `<div><span class="stat-label">${icon('sparkles')} Fastest answer</span><strong>${answerDurationLabel(answerStats.fastest)}</strong></div><div><span class="stat-label">${icon('clock-3')} Slowest answer</span><strong>${answerDurationLabel(answerStats.slowest)}</strong></div><div><span class="stat-label">${icon('target')} Median answer</span><strong>${answerDurationLabel(answerStats.median)}</strong></div><div><span class="stat-label">${icon('check-check')} Average answer</span><strong>${answerDurationLabel(answerStats.average)}</strong></div>` : ''}</section>
     <section class="review-section"><div class="review-heading"><h2>${mistakes.length ? 'A few to practice next time' : 'Nothing to review'}</h2><span>${mistakes.length} ${mistakes.length === 1 ? 'question' : 'questions'}</span></div>${mistakes.length ? `<div class="table-scroll"><table><thead><tr><th>Question</th><th>Your answer</th><th>Correct answer</th></tr></thead><tbody>${mistakes.map(answer => `<tr><td>${answer.first} &times; ${answer.second}</td><td class="wrong-answer">${icon('x')} ${answer.answer}</td><td class="right-answer">${icon('check')} ${answer.expected}</td></tr>`).join('')}</tbody></table></div>` : `<div class="empty-review">${icon('check')}<p>${session.answers.length ? 'You got every question you answered right.' : 'No answers yet. Your next practice is a fresh start.'}</p></div>`}</section>
     <div class="results-actions"><button class="text-button" id="change-settings">${icon('arrow-left')} Change settings</button><button class="primary-button" id="again">${icon('rotate-ccw')} Practice again</button></div>`, 'results');
   document.querySelector('#change-settings').addEventListener('click', showSetup);

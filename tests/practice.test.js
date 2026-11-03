@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { makeQuestions, startSession, remainingSeconds, submitAnswer, finishSession } from '../src/practice.js';
+import { makeQuestions, startSession, remainingSeconds, submitAnswer, finishSession, answerTimeStats } from '../src/practice.js';
 
 test('questions use the Cartesian product and exhaust a shuffled cycle before repeating', () => {
   const questions = makeQuestions([1, 2, 3, 4], [3, 4, 5], 25);
@@ -45,4 +45,21 @@ test('ending a session is idempotent', () => {
   finishSession(session, 'time', 60000);
   assert.equal(session.reason, 'stopped');
   assert.equal(session.endedAt, 2000);
+});
+
+test('answer time stats compute fastest, slowest and median durations', () => {
+  const stats = answerTimeStats([
+    { responseMs: 800 },
+    { responseMs: 2000 },
+    { responseMs: 1500 },
+    { responseMs: 3500 },
+    { responseMs: 1200 }
+  ]);
+
+  assert.deepEqual(stats, {
+    fastest: 800,
+    slowest: 3500,
+    median: 1500,
+    average: 1800
+  });
 });
