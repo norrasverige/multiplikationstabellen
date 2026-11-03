@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prestart": "npm run build",
     "start": "node server.js",
     "dev": "vite --host 127.0.0.1 --port 5173",
     "build": "vite build",
